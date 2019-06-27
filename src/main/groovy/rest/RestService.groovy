@@ -47,7 +47,6 @@ List execute(limMax){
             response.success = { resp, reader ->
                 assert resp.status == 200
                 result.addAll(reader.items)
-                totalResults=reader.totalResults
             }
 
             response.'404' = { resp ->
