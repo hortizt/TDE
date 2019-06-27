@@ -1,4 +1,0 @@
-package rest
-
-class Rest {
-}

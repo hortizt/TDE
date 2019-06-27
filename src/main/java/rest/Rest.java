@@ -1,31 +1,22 @@
 package rest;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import okhttp3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
-public class RestService {
-    private static final Logger log = LoggerFactory.getLogger(RestService.class);
-    private static final Logger requestLog = LoggerFactory.getLogger(RestService.class.getName() + ".request");
-    private static final Logger responseLog = LoggerFactory.getLogger(RestService.class.getName() + ".response");
+public class Rest {
+    //private static final Logger log = LoggerFactory.getLogger(Rest.class);
+    //private static final Logger requestLog = LoggerFactory.getLogger(Rest.class.getName() + ".request");
+    //private static final Logger responseLog = LoggerFactory.getLogger(Rest.class.getName() + ".response");
 
     private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(100,
             30, TimeUnit.SECONDS);
@@ -42,9 +33,9 @@ public class RestService {
     }
     private static final ConcurrentHashMap<Credentials, Token> tokenCache = new ConcurrentHashMap<>();
 
-    @Nonnull
+    
     protected final String url;
-    @Nonnull
+    
     protected final Credentials credentials;
     protected final int connectTimeout;
     protected final int responseTimeout;
@@ -58,20 +49,14 @@ public class RestService {
     protected static final MediaType MEDIA_TYPE_JSON
             = MediaType.parse("application/json; charset=utf-8");
 
-    public RestService(@Nonnull String url, @Nonnull Credentials credentials) {
+    public Rest( String url,  Credentials credentials) {
         this(url, credentials, 5000, 20000, 0, 10);
     }
 
-    public RestService(@Nonnull String url, @Nonnull Credentials credentials,
-                       int connectTimeout, int responseTimeout, int retryCount,
-                       int maxConcurrentRequests) {
-        this(url, credentials, connectTimeout, responseTimeout, retryCount, maxConcurrentRequests, null);
-    }
 
-    public RestService(@Nonnull String url, @Nonnull Credentials credentials,
-                       int connectTimeout, int responseTimeout, int retryCount,
-                       int maxConcurrentRequests,
-                       @Nullable ProxyConfig proxyConfig) {
+    protected Rest( String url,  Credentials credentials,
+                int connectTimeout, int responseTimeout, int retryCount,
+                int maxConcurrentRequests) {
         this.credentials = credentials;
         this.maxConcurrentRequests = maxConcurrentRequests;
         if (url.endsWith("/")) {
@@ -102,8 +87,7 @@ public class RestService {
         if (body == null) throw new IOException("Empty response body: " + response);
         try {
             final String bodyString = body.string();
-            if (log.isTraceEnabled())
-                log.trace(bodyString);
+
             return bodyString;
         } finally {
             body.close();
@@ -138,7 +122,7 @@ public class RestService {
         Token token = tokenCache.get(credentials);
         final Instant now = Instant.now();
         if (token == null || token.expirationTime.isBefore(now)) {
-            //synchronized(RestService.class) {
+            //synchronized(Rest.class) {
                 // double-check after synchronization block
                 token = tokenCache.get(credentials);
                 if (token == null || token.expirationTime.isBefore(now)) {
@@ -157,7 +141,7 @@ public class RestService {
                     // cleanup expired tokens
                     tokenCache.entrySet().removeIf(it -> it.getValue().expirationTime.isBefore(now));
                     tokenCache.put(credentials, token);
-                    log.debug("New access token requested");
+
                 }
             //}
         }
@@ -178,8 +162,7 @@ public class RestService {
                 .post(new FormBody.Builder().add("grant_type", "client_credentials").build())
                 .build();
 
-        if (requestLog.isTraceEnabled())
-            requestLog.trace(request.toString());
+
 
         final Response response = httpClient.newCall(request).execute();
         final String bodyString = responseBody(response);
