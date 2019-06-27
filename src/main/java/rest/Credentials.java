@@ -16,7 +16,7 @@ public class Credentials {
         this.company = company;
     }
 
-    public <T> T mapTo( T user) {
+   /* public <T> T mapTo( T user) {
         try {
             String now = DatatypeFactory.newInstance().newXMLGregorianCalendar(
                     new GregorianCalendar()).toXMLFormat();
@@ -40,4 +40,6 @@ public class Credentials {
 
         return user;
     }
+
+    */
 }
